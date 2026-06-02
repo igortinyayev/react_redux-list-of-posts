@@ -5,13 +5,13 @@ import { getUsers } from '../api/users';
 
 interface UserProps {
   user: User[];
-  loader: boolean;
+  loaded: boolean;
   error: string;
 }
 
 const initialState: UserProps = {
   user: [],
-  loader: false,
+  loaded: false,
   error: '',
 };
 
@@ -27,18 +27,16 @@ export const userSlice = createSlice({
   reducers: {},
   extraReducers: builder => {
     builder.addCase(fetchUser.pending, state => {
-      state.loader = false;
+      state.loaded = false;
       state.error = '';
     });
-
     builder.addCase(fetchUser.fulfilled, (state, action) => {
-      state.loader = false;
+      state.loaded = true;
       state.user = action.payload;
       state.error = '';
     });
-
     builder.addCase(fetchUser.rejected, (state, action) => {
-      state.loader = true;
+      state.loaded = false;
       state.error = action.error.message || 'Failed to fetch user';
     });
   },

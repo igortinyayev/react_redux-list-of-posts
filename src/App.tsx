@@ -12,10 +12,17 @@ import { useAppDispatch, useAppSelector } from './app/hooks';
 import { fetchPosts, setPosts } from './features/post';
 import { setAuthor } from './features/author';
 import { setSelectedPost } from './features/selectedPost';
+import { RootState } from './app/store';
 
 export const App: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { items: posts, loader, error } = useAppSelector(state => state.posts);
+
+  const {
+    items: posts,
+    loaded,
+    hasError: error,
+  } = useAppSelector((state: RootState) => state.posts);
+
   const author = useAppSelector(state => state.author.author);
   const selectedPost = useAppSelector(state => state.selectedPost.selectedPost);
 
@@ -40,10 +47,16 @@ export const App: React.FC = () => {
                   onChange={(user: User) => dispatch(setAuthor(user))}
                 />
               </div>
+
               <div className="block" data-cy="MainContent">
+                {/* 1. Если пользователь не выбран */}
                 {!author && <p data-cy="NoSelectedUser">No user selected</p>}
-                {loader && <Loader />}
-                {author && loader && error && (
+
+                {/* 2. Если идет загрузка постов (!loaded) */}
+                {author && !loaded && <Loader />}
+
+                {/* 3. Ошибка загрузки (показываем только после того, как загрузка завершилась) */}
+                {author && loaded && error && (
                   <div
                     className="notification is-danger"
                     data-cy="PostsLoadingError"
@@ -51,12 +64,16 @@ export const App: React.FC = () => {
                     Something went wrong!
                   </div>
                 )}
-                {author && !loader && !error && posts.length === 0 && (
+
+                {/* 4. Постов нет (загрузка завершена, ошибок нет, массив пустой) */}
+                {author && loaded && !error && posts.length === 0 && (
                   <div className="notification is-warning" data-cy="NoPostsYet">
                     No posts yet
                   </div>
                 )}
-                {!loader && !error && posts.length > 0 && (
+
+                {/* 5. Вывод списка постов (загрузка завершена, ошибок нет, есть элементы) */}
+                {author && loaded && !error && posts.length > 0 && (
                   <PostsList
                     posts={posts}
                     selectedPostId={selectedPost?.id}
@@ -68,6 +85,7 @@ export const App: React.FC = () => {
               </div>
             </div>
           </div>
+
           <div
             data-cy="Sidebar"
             className={classNames(

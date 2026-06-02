@@ -4,17 +4,18 @@ import { createComment, deleteComment, getPostComments } from '../api/comments';
 import { Comment, CommentData } from '../types/Comment';
 
 interface CommentsState {
-  comments: Comment[];
-  loader: boolean;
-  error: boolean;
+  items: Comment[];
+  loaded: boolean;
+  hasError: boolean;
 }
 
 const initialState: CommentsState = {
-  comments: [],
-  loader: false,
-  error: false,
+  items: [],
+  loaded: false,
+  hasError: false,
 };
 
+// Fetch comments
 export const fetchComments = createAsyncThunk(
   'comments/fetchComments',
   async (postId: number) => {
@@ -24,6 +25,7 @@ export const fetchComments = createAsyncThunk(
   },
 );
 
+// Add comment
 export const addComment = createAsyncThunk(
   'comments/addComment',
   async ({ postId, data }: { postId: number; data: CommentData }) => {
@@ -33,6 +35,7 @@ export const addComment = createAsyncThunk(
   },
 );
 
+// Delete comment
 export const deleteCommentThunk = createAsyncThunk(
   'comments/deleteComment',
   async (commentId: number) => {
@@ -47,38 +50,37 @@ export const commentSlice = createSlice({
   initialState,
   reducers: {
     setComments: (state, action: PayloadAction<Comment[]>) => {
-      state.comments = action.payload;
+      state.items = action.payload;
     },
   },
   extraReducers: builder => {
     builder
       .addCase(fetchComments.pending, state => {
-        state.loader = true;
-        state.error = false;
+        state.loaded = false;
+        state.hasError = false;
       })
       .addCase(
         fetchComments.fulfilled,
         (state, action: PayloadAction<Comment[]>) => {
-          state.loader = false;
-          state.comments = action.payload;
-          state.error = false;
+          state.loaded = true;
+          state.items = action.payload;
+          state.hasError = false;
         },
       )
       .addCase(fetchComments.rejected, state => {
-        state.loader = false;
-        state.error = true;
-        state.comments = [];
+        state.loaded = true;
+        state.hasError = true;
       })
       .addCase(
         addComment.fulfilled,
         (state, action: PayloadAction<Comment>) => {
-          state.comments.push(action.payload);
+          state.items.push(action.payload);
         },
       )
       .addCase(
         deleteCommentThunk.fulfilled,
         (state, action: PayloadAction<number>) => {
-          state.comments = state.comments.filter(
+          state.items = state.items.filter(
             comment => comment.id !== action.payload,
           );
         },
@@ -86,6 +88,5 @@ export const commentSlice = createSlice({
   },
 });
 
-// Export actions and reducer
 export const { setComments } = commentSlice.actions;
 export default commentSlice.reducer;

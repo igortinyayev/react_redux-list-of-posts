@@ -5,14 +5,14 @@ import { Post } from '../types/Post';
 
 interface PostProps {
   items: Post[];
-  loader: boolean;
-  error: boolean;
+  loaded: boolean;
+  hasError: boolean;
 }
 
 const initialState: PostProps = {
   items: [],
-  loader: false,
-  error: false,
+  loaded: false,
+  hasError: false,
 };
 
 export const fetchPosts = createAsyncThunk(
@@ -32,26 +32,22 @@ export const postSlice = createSlice({
       state.items = action.payload;
     },
   },
-
   extraReducers: builder => {
     builder.addCase(fetchPosts.pending, state => {
-      state.loader = true;
-      state.error = false;
+      state.loaded = false;
+      state.hasError = false;
     });
-
     builder.addCase(fetchPosts.fulfilled, (state, action) => {
-      state.loader = false;
+      state.loaded = true;
       state.items = action.payload;
-      state.error = false;
+      state.hasError = false;
     });
-
     builder.addCase(fetchPosts.rejected, state => {
-      state.loader = false;
-      state.error = true;
+      state.loaded = true;
+      state.hasError = true;
     });
   },
 });
 
 export const { setPosts } = postSlice.actions;
-
 export default postSlice.reducer;
