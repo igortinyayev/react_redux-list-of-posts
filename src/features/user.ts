@@ -1,45 +1,59 @@
 /* eslint-disable no-param-reassign */
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { User } from '../types/User';
-import { getUsers } from '../api/users';
 
-interface UserProps {
-  user: User[];
+interface UserState {
+  items: User[];
   loaded: boolean;
-  error: string;
+  hasError: boolean;
+  selectedUserId: number | null;
 }
 
-const initialState: UserProps = {
-  user: [],
+const initialState: UserState = {
+  items: [],
   loaded: false,
-  error: '',
+  hasError: false,
+  selectedUserId: null,
 };
 
-export const fetchUser = createAsyncThunk('user/fetchUser', async () => {
-  const user = await getUsers();
+export const fetchUsers = createAsyncThunk<User[]>('users/fetch', async () => {
+  const res = await fetch('https://jsonplaceholder.typicode.com/users');
 
-  return user;
+  if (!res.ok) {
+    throw new Error('Failed to fetch users');
+  }
+
+  return (await res.json()) as User[];
 });
 
-export const userSlice = createSlice({
+const userSlice = createSlice({
   name: 'user',
   initialState,
-  reducers: {},
+  reducers: {
+    setSelectedUserId: (state, action: PayloadAction<number | null>) => {
+      state.selectedUserId = action.payload;
+    },
+    setUsers: (state, action: PayloadAction<User[]>) => {
+      state.items = action.payload;
+    },
+  },
   extraReducers: builder => {
-    builder.addCase(fetchUser.pending, state => {
-      state.loaded = false;
-      state.error = '';
-    });
-    builder.addCase(fetchUser.fulfilled, (state, action) => {
-      state.loaded = true;
-      state.user = action.payload;
-      state.error = '';
-    });
-    builder.addCase(fetchUser.rejected, (state, action) => {
-      state.loaded = false;
-      state.error = action.error.message || 'Failed to fetch user';
-    });
+    builder
+      .addCase(fetchUsers.pending, state => {
+        state.loaded = false;
+        state.hasError = false;
+      })
+      .addCase(fetchUsers.fulfilled, (state, action) => {
+        state.loaded = true;
+        state.items = action.payload;
+        state.hasError = false;
+      })
+      .addCase(fetchUsers.rejected, state => {
+        state.loaded = true;
+        state.hasError = true;
+      });
   },
 });
 
+export const { setSelectedUserId, setUsers } = userSlice.actions;
 export default userSlice.reducer;
