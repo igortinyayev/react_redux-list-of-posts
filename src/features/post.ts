@@ -3,24 +3,22 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { getUserPosts } from '../api/posts';
 import { Post } from '../types/Post';
 
-interface PostProps {
+export interface PostState {
   items: Post[];
   loaded: boolean;
   hasError: boolean;
 }
 
-const initialState: PostProps = {
+const initialState: PostState = {
   items: [],
-  loaded: false,
+  loaded: true, // Изначально загрузка не идет
   hasError: false,
 };
 
 export const fetchPosts = createAsyncThunk(
   'posts/fetchPosts',
   async (userId: number) => {
-    const posts = await getUserPosts(userId);
-
-    return posts;
+    return getUserPosts(userId);
   },
 );
 
@@ -33,19 +31,20 @@ export const postSlice = createSlice({
     },
   },
   extraReducers: builder => {
-    builder.addCase(fetchPosts.pending, state => {
-      state.loaded = false;
-      state.hasError = false;
-    });
-    builder.addCase(fetchPosts.fulfilled, (state, action) => {
-      state.loaded = true;
-      state.items = action.payload;
-      state.hasError = false;
-    });
-    builder.addCase(fetchPosts.rejected, state => {
-      state.loaded = true;
-      state.hasError = true;
-    });
+    builder
+      .addCase(fetchPosts.pending, state => {
+        state.loaded = false; // Началась загрузка
+        state.hasError = false;
+      })
+      .addCase(fetchPosts.fulfilled, (state, action) => {
+        state.loaded = true; // Загрузка завершена успешно
+        state.items = action.payload;
+        state.hasError = false;
+      })
+      .addCase(fetchPosts.rejected, state => {
+        state.loaded = true; // Загрузка завершена (с ошибкой)
+        state.hasError = true;
+      });
   },
 });
 

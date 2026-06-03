@@ -17,6 +17,7 @@ import { RootState } from './app/store';
 export const App: React.FC = () => {
   const dispatch = useAppDispatch();
 
+  // Берем строго loaded и hasError
   const {
     items: posts,
     loaded,
@@ -49,14 +50,13 @@ export const App: React.FC = () => {
               </div>
 
               <div className="block" data-cy="MainContent">
-                {/* 1. Если пользователь не выбран */}
                 {!author && <p data-cy="NoSelectedUser">No user selected</p>}
 
-                {/* 2. Если идет загрузка постов (!loaded) */}
+                {/* Если идет загрузка — показываем Loader */}
                 {author && !loaded && <Loader />}
 
-                {/* 3. Ошибка загрузки (показываем только после того, как загрузка завершилась) */}
-                {author && loaded && error && (
+                {/* ИСПРАВЛЕНО: Ошибка проверяется независимо от posts.length */}
+                {author && error && (
                   <div
                     className="notification is-danger"
                     data-cy="PostsLoadingError"
@@ -65,14 +65,14 @@ export const App: React.FC = () => {
                   </div>
                 )}
 
-                {/* 4. Постов нет (загрузка завершена, ошибок нет, массив пустой) */}
+                {/* Список пуст (загрузка завершена, ошибок нет) */}
                 {author && loaded && !error && posts.length === 0 && (
                   <div className="notification is-warning" data-cy="NoPostsYet">
                     No posts yet
                   </div>
                 )}
 
-                {/* 5. Вывод списка постов (загрузка завершена, ошибок нет, есть элементы) */}
+                {/* Рендеринг постов (загрузка завершена, ошибок нет) */}
                 {author && loaded && !error && posts.length > 0 && (
                   <PostsList
                     posts={posts}
